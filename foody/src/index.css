@@ -176,3 +176,25 @@ html body [class*="Toastify__zoom-exit"] {
   transform: translateX(-50%) !important;
   z-index: 99999 !important;
 }
+
+/* ✅ Force toast to top-center */
+.Toastify__toast-container {
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 99999 !important;
+}
+
+.Toastify__toast-container--top-center {
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+.Toastify__toast {
+  border-radius: 12px !important;
+  font-family: 'Poppins', sans-serif !important;
+  box-shadow: 0 10px 30px rgba(255, 99, 71, 0.3) !important;
+  min-height: auto !important;
+  padding: 12px 16px !important;
+}

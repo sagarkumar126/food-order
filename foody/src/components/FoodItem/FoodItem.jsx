@@ -37,13 +37,22 @@ const FoodItem = ({
   const displayImage =
     images && images.length > 0 ? images[0] : image;
 
+  const getImageUrl = (img) => {
+    if (!img) return "";
+    if (img.startsWith("http")) return img;
+    return `${url}/uploads/${img}`;
+  };
+
   const finalPrice =
     discount > 0 ? Math.round(price - (price * discount) / 100) : price;
 
   const handleAdd = (e) => {
     e.stopPropagation();
     addToCart(id);
-    toast.success(`${name} added to cart! 🛒`);
+    toast.success(`${name} added to cart! 🛒`, {
+      position: "top-center",
+      autoClose: 1500,
+    });
   };
 
   const handleRemove = (e) => {
@@ -72,11 +81,10 @@ const FoodItem = ({
       <div className="food-item-img-container">
         <img
           className="food-item-image"
-          src={`${url}/uploads/${displayImage}`}
+          src={getImageUrl(displayImage)}
           alt={name}
         />
 
-        {/* Veg / Non-Veg Indicator */}
         <div className={`veg-indicator ${isVeg ? "veg" : "non-veg"}`}>
           <div className="veg-dot" />
         </div>
@@ -136,3 +144,8 @@ const FoodItem = ({
 };
 
 export default FoodItem;
+
+
+
+
+

@@ -1,0 +1,6 @@
+ssggrkumar2001_db_user
+
+UFTE8hmRGECWU6ky
+
+
+mongodb+srv://ssggrkumar2001_db_user:UFTE8hmRGECWU6ky@cluster0.ifv8qb6.mongodb.net/

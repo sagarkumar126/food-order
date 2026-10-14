@@ -124,6 +124,13 @@ const List = ({ url }) => {
     }
   };
 
+  // ✅ SMART IMAGE URL — Cloudinary ya local
+  const getImageUrl = (image) => {
+    if (!image) return "";
+    if (image.startsWith("http")) return image;
+    return `${url}/uploads/${image}`;
+  };
+
   const getStockBadge = (stock) => {
     const s = stock !== undefined ? stock : 50;
     if (s === 0) {
@@ -218,7 +225,6 @@ const List = ({ url }) => {
         )}
       </p>
 
-      {/* ✅ EXPANDED TABLE */}
       <div className="list-table">
         <div className="list-table-format title list-table-expanded">
           <div>
@@ -266,10 +272,10 @@ const List = ({ url }) => {
                   />
                 </div>
 
-                {/* Image + Multi-count */}
+                {/* ✅ SMART IMAGE URL */}
                 <div className="img-wrapper">
                   <img
-                    src={`${url}/uploads/` + item.image}
+                    src={getImageUrl(item.image)}
                     alt={item.name}
                     className="food-thumb"
                   />
@@ -278,7 +284,6 @@ const List = ({ url }) => {
                   )}
                 </div>
 
-                {/* Food Details */}
                 <div className="food-details-cell">
                   <p className="food-name">{item.name}</p>
                   <p className="food-desc-preview">
@@ -293,10 +298,8 @@ const List = ({ url }) => {
                   )}
                 </div>
 
-                {/* Category */}
                 <p className="food-category-cell">{item.category}</p>
 
-                {/* Price with discount */}
                 <div className="price-cell">
                   {item.discount > 0 ? (
                     <>
@@ -313,15 +316,12 @@ const List = ({ url }) => {
                   )}
                 </div>
 
-                {/* Stock */}
                 <div className="stock-cell">
                   {getStockBadge(item.stock)}
                 </div>
 
-                {/* Veg / Non-Veg */}
                 <div className="veg-cell">{getVegBadge(item.isVeg)}</div>
 
-                {/* Actions */}
                 <div className="action-buttons">
                   <button
                     className="edit-btn"
@@ -355,3 +355,6 @@ const List = ({ url }) => {
 };
 
 export default List;
+
+
+

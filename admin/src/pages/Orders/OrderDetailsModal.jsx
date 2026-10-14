@@ -4,6 +4,13 @@ import { assets } from "../../assets/assets";
 const OrderDetailsModal = ({ order, url, onClose }) => {
   if (!order) return null;
 
+  // ✅ FIX: Smart image URL — Cloudinary ya local
+  const getImageUrl = (img) => {
+    if (!img) return "";
+    if (img.startsWith("http")) return img;
+    return `${url}/uploads/${img}`;
+  };
+
   const styles = {
     overlay: {
       position: "fixed",
@@ -238,7 +245,7 @@ const OrderDetailsModal = ({ order, url, onClose }) => {
               {order.items.map((item, idx) => (
                 <div key={idx} style={styles.itemRow}>
                   <img
-                    src={`${url}/uploads/${item.image}`}
+                    src={getImageUrl(item.image)}
                     alt={item.name}
                     style={styles.itemImg}
                   />
@@ -293,6 +300,3 @@ const OrderDetailsModal = ({ order, url, onClose }) => {
 };
 
 export default OrderDetailsModal;
-
-
-

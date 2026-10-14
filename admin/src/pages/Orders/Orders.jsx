@@ -11,7 +11,6 @@ const Orders = ({ url }) => {
   const [filter, setFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ✅ Viewed orders state — localStorage se
   const [viewedIds, setViewedIds] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("viewedOrderIds") || "[]");
@@ -23,13 +22,19 @@ const Orders = ({ url }) => {
   const fetchAllOrders = async () => {
     try {
       const res = await axios.get(url + "/api/order/list");
+      console.log("📦 Orders fetched:", res.data);
+
       if (res.data.success) {
-        setOrders(res.data.data);
+        const validOrders = (res.data.data || []).filter(
+          (o) => o && o._id && o.items && o.address
+        );
+        console.log("✅ Valid orders:", validOrders.length);
+        setOrders(validOrders);
       } else {
         toast.error("Error fetching orders");
       }
     } catch (err) {
-      console.error(err);
+      console.error("❌ Fetch error:", err);
       toast.error("Something went wrong while fetching orders");
     }
   };
@@ -49,18 +54,14 @@ const Orders = ({ url }) => {
     fetchAllOrders();
   }, []);
 
-  // ✅ Order ko "viewed" mark karo
   const markAsViewed = (orderId) => {
     if (viewedIds.includes(orderId)) return;
-
     const updated = [...viewedIds, orderId];
     setViewedIds(updated);
     localStorage.setItem("viewedOrderIds", JSON.stringify(updated));
-
     window.dispatchEvent(new CustomEvent("ordersViewed"));
   };
 
-  // ✅ "View" click handler
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     markAsViewed(order._id);
@@ -72,11 +73,16 @@ const Orders = ({ url }) => {
 
   const formatDateTime = (date, orderId) => {
     let d;
-    if (date) {
-      d = new Date(date);
-    } else if (orderId) {
-      d = new Date(parseInt(orderId.substring(0, 8), 16) * 1000);
-    } else {
+    try {
+      if (date) {
+        d = new Date(date);
+      } else if (orderId) {
+        d = new Date(parseInt(orderId.substring(0, 8), 16) * 1000);
+      } else {
+        return { date: "N/A", time: "N/A" };
+      }
+      if (isNaN(d.getTime())) return { date: "N/A", time: "N/A" };
+    } catch {
       return { date: "N/A", time: "N/A" };
     }
     return {
@@ -101,16 +107,20 @@ const Orders = ({ url }) => {
   };
 
   const filteredOrders = orders.filter((o) => {
-    const matchesFilter = filter === "All" || o.status === filter;
-    const query = searchQuery.toLowerCase();
-    const matchesSearch =
-      !searchQuery ||
-      `${o.address?.firstName || ""} ${o.address?.lastName || ""}`
-        .toLowerCase()
-        .includes(query) ||
-      o._id.toLowerCase().includes(query) ||
-      (o.address?.phone || "").includes(query);
-    return matchesFilter && matchesSearch;
+    try {
+      const matchesFilter = filter === "All" || o.status === filter;
+      const query = searchQuery.toLowerCase();
+      const matchesSearch =
+        !searchQuery ||
+        `${o.address?.firstName || ""} ${o.address?.lastName || ""}`
+          .toLowerCase()
+          .includes(query) ||
+        (o._id || "").toLowerCase().includes(query) ||
+        (o.address?.phone || "").includes(query);
+      return matchesFilter && matchesSearch;
+    } catch {
+      return true;
+    }
   });
 
   const filterButtons = [
@@ -169,7 +179,9 @@ const Orders = ({ url }) => {
       <div className="orders-table-wrapper">
         {filteredOrders.length === 0 ? (
           <p className="no-orders-found">
-            {searchQuery
+            {orders.length === 0
+              ? "No paid orders yet."
+              : searchQuery
               ? `No orders found for "${searchQuery}" 🔍`
               : filter !== "All"
               ? `No orders with status "${filter}"`
@@ -195,7 +207,12 @@ const Orders = ({ url }) => {
                 const dt = formatDateTime(o.date, o._id);
                 const isViewed = viewedIds.includes(o._id);
                 return (
-                  <tr key={i} className={isViewed ? "row-viewed" : ""}>
+                  <tr
+                    key={i}
+                    className={isViewed ? "row-viewed" : ""}
+                    onClick={() => handleViewOrder(o)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <td className="td-index">
                       {i + 1}
                       {isViewed && <span className="viewed-dot">●</span>}
@@ -208,33 +225,34 @@ const Orders = ({ url }) => {
                         </div>
                         <div>
                           <p className="customer-name">
-                            {o.address?.firstName} {o.address?.lastName}
+                            {o.address?.firstName || "Customer"}{" "}
+                            {o.address?.lastName || ""}
                           </p>
                           <p className="customer-id">
-                            #{o._id.slice(-6).toUpperCase()}
+                            #{o._id?.slice(-6).toUpperCase() || "N/A"}
                           </p>
                         </div>
                       </div>
                     </td>
 
                     <td className="td-items">
-                      <p className="items-count">{o.items.length} items</p>
+                      <p className="items-count">{o.items?.length || 0} items</p>
                       <p className="items-preview">
-                        {o.items
+                        {(o.items || [])
                           .slice(0, 2)
-                          .map((it) => `${it.name} x${it.quantity}`)
+                          .map((it) => `${it.name || "Item"} x${it.quantity || 0}`)
                           .join(", ")}
-                        {o.items.length > 2 && ` +${o.items.length - 2} more`}
+                        {o.items?.length > 2 && ` +${o.items.length - 2} more`}
                       </p>
                     </td>
 
                     <td className="td-address">
-                      {o.address?.street}, {o.address?.city}
+                      {o.address?.street || "-"}, {o.address?.city || "-"}
                     </td>
 
-                    <td className="td-phone">{o.address?.phone}</td>
+                    <td className="td-phone">{o.address?.phone || "-"}</td>
 
-                    <td className="td-amount">₹{o.amount}</td>
+                    <td className="td-amount">₹{o.amount || 0}</td>
 
                     <td className="td-datetime">
                       <p className="dt-date">📅 {dt.date}</p>
@@ -243,12 +261,13 @@ const Orders = ({ url }) => {
 
                     <td className="td-status">
                       <span className={`status-badge ${statusColor(o.status)}`}>
-                        {o.status}
+                        {o.status || "Pending"}
                       </span>
                       <select
                         className="status-select"
                         onChange={(e) => statusHandler(e, o._id)}
-                        value={o.status}
+                        onClick={(e) => e.stopPropagation()}
+                        value={o.status || "Food Processing"}
                       >
                         <option value="Food Processing">Food Processing</option>
                         <option value="Out for delivery">Out for delivery</option>
@@ -256,20 +275,19 @@ const Orders = ({ url }) => {
                       </select>
                     </td>
 
-                    {/* ✅ View button + Viewed badge dono */}
                     <td className="td-action">
                       <div className="action-wrapper">
                         <button
                           className={`view-details-btn ${isViewed ? "viewed" : ""}`}
-                          onClick={() => handleViewOrder(o)}
-                          title={isViewed ? "View again" : "View details"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewOrder(o);
+                          }}
                         >
                           👁️ View
                         </button>
                         {isViewed && (
-                          <span className="viewed-badge-mini">
-                            ✅ Viewed
-                          </span>
+                          <span className="viewed-badge-mini">✅ Viewed</span>
                         )}
                       </div>
                     </td>
@@ -293,3 +311,6 @@ const Orders = ({ url }) => {
 };
 
 export default Orders;
+
+
+

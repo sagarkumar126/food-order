@@ -19,11 +19,12 @@ export const placeOrder = async (req, res) => {
     });
     await newOrder.save();
 
-    // ✅ COD — order confirm (admin mein bhi dikhega)
+    // ✅ COD
     if (paymentMethod === "COD") {
       await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
       await orderModel.findByIdAndUpdate(newOrder._id, {
         payment: true,
+        status: "Food Processing",
         date: new Date(),
       });
       return res.json({
@@ -58,8 +59,8 @@ export const placeOrder = async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       line_items,
       mode: "payment",
-      success_url: `http://localhost:5173/confirm?success=true&orderId=${newOrder._id}`,
-      cancel_url: `http://localhost:5173/verify?success=false&orderId=${newOrder._id}`,
+      success_url: `http://localhost:5174/confirm?success=true&orderId=${newOrder._id}`,
+      cancel_url: `http://localhost:5174/verify?success=false&orderId=${newOrder._id}`,
     });
 
     res.json({ success: true, session_url: session.url });
@@ -74,7 +75,11 @@ export const verifyOrder = async (req, res) => {
     if (req.body.success === "true") {
       const order = await orderModel.findByIdAndUpdate(
         req.body.orderId,
-        { payment: true, date: new Date() },
+        {
+          payment: true,
+          status: "Food Processing",
+          date: new Date(),
+        },
         { new: true }
       );
 
@@ -105,7 +110,7 @@ export const userOrders = async (req, res) => {
   }
 };
 
-// ✅ listOrders — COD + Online dono dikhenge (dono ab payment: true hain)
+// ✅ listOrders — SIRF PAID orders admin mein
 export const listOrders = async (req, res) => {
   try {
     const orders = await orderModel
@@ -129,3 +134,6 @@ export const updateStatus = async (req, res) => {
     res.json({ success: false, message: "Error updating status" });
   }
 };
+
+
+

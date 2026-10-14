@@ -26,10 +26,6 @@ const PlaceOrder = () => {
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // ✅ NEW: Order confirmed popup state
-  const [showOrderConfirmed, setShowOrderConfirmed] = useState(false);
-  const [confirmedOrderId, setConfirmedOrderId] = useState(null);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -115,11 +111,10 @@ const PlaceOrder = () => {
 
       if (res.data.success) {
         if (res.data.isCOD) {
-          // ✅ COD — Order Confirmed popup dikhao
+          // ✅ COD — Direct MyOrders pe bhejo
           await clearCart();
-          setConfirmedOrderId(res.data.orderId);
-          setShowOrderConfirmed(true);
-          setLoading(false);
+          toast.success("Order placed successfully! 🎉");
+          navigate("/myorders");
         } else {
           // ✅ Stripe — redirect
           window.location.replace(res.data.session_url);
@@ -133,12 +128,6 @@ const PlaceOrder = () => {
       toast.error("Something went wrong");
       setLoading(false);
     }
-  };
-
-  // ✅ Order Confirmed popup OK handler
-  const handleOrderConfirmedOk = () => {
-    setShowOrderConfirmed(false);
-    navigate("/myorders");
   };
 
   const inputClass = (field) =>
@@ -390,41 +379,6 @@ const PlaceOrder = () => {
                 Yes, Place Order 💵
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ✅ ORDER CONFIRMED POPUP — COD ke baad */}
-      {showOrderConfirmed && (
-        <div
-          className="confirm-overlay"
-          onClick={handleOrderConfirmedOk}
-        >
-          <div
-            className="confirm-modal order-confirmed-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="order-confirmed-icon">✅</div>
-            <h3 className="order-confirmed-title">
-              Your order is confirmed!
-            </h3>
-            <p className="order-confirmed-message">
-              Thank you for your order. Your food is being prepared and will
-              be delivered soon! 🚚
-            </p>
-
-            {confirmedOrderId && (
-              <div className="order-confirmed-id">
-                Order ID: <b>#{confirmedOrderId.slice(-8).toUpperCase()}</b>
-              </div>
-            )}
-
-            <button
-              className="order-confirmed-btn"
-              onClick={handleOrderConfirmedOk}
-            >
-              OK, Got it! 🎉
-            </button>
           </div>
         </div>
       )}

@@ -46,3 +46,7 @@ const WishlistIcon = ({ foodId }) => {
 };
 
 export default WishlistIcon;
+
+
+
+

@@ -13,7 +13,13 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
 
   const wrapperRef = useRef(null);
 
-  // ✅ Load recent searches
+  // ✅ Smart image URL
+  const getImageUrl = (img) => {
+    if (!img) return "";
+    if (img.startsWith("http")) return img;
+    return `${url}/uploads/${img}`;
+  };
+
   useEffect(() => {
     try {
       const saved = JSON.parse(
@@ -25,7 +31,6 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
     }
   }, []);
 
-  // ✅ Close dropdown on outside click
   useEffect(() => {
     const handleClick = (e) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -36,7 +41,6 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // ✅ Live suggestions
   useEffect(() => {
     if (query.trim().length < 1) {
       setSuggestions([]);
@@ -45,7 +49,6 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
 
     const q = query.toLowerCase().trim();
 
-    // Matching food items (name match)
     const foodMatches = food_list
       .filter((item) => item.name.toLowerCase().includes(q))
       .slice(0, 5)
@@ -59,7 +62,6 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
         rating: getFoodRating(item._id).rating,
       }));
 
-    // Matching categories
     const allCategories = [...new Set(food_list.map((f) => f.category))];
     const categoryMatches = allCategories
       .filter((c) => c.toLowerCase().includes(q))
@@ -73,7 +75,6 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
     setHighlightedIndex(-1);
   }, [query, food_list]);
 
-  // ✅ Save recent search
   const saveRecentSearch = (term) => {
     const trimmed = term.trim();
     if (!trimmed) return;
@@ -87,14 +88,12 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
     localStorage.setItem("recentSearches", JSON.stringify(updated));
   };
 
-  // ✅ Clear recent searches
   const clearRecent = () => {
     setRecentSearches([]);
     localStorage.removeItem("recentSearches");
     toast.info("Recent searches cleared");
   };
 
-  // ✅ Handle change
   const handleChange = (e) => {
     const val = e.target.value;
     setQuery(val);
@@ -102,7 +101,6 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
     if (onSearchChange) onSearchChange(val);
   };
 
-  // ✅ Handle suggestion click
   const handleSuggestionClick = (sug) => {
     if (sug.type === "food") {
       saveRecentSearch(sug.name);
@@ -116,14 +114,12 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
     }
   };
 
-  // ✅ Clear input
   const handleClear = () => {
     setQuery("");
     if (onSearchChange) onSearchChange("");
     setShowDropdown(false);
   };
 
-  // ✅ Keyboard navigation
   const handleKeyDown = (e) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -322,10 +318,8 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
         )}
       </div>
 
-      {/* ✅ Dropdown */}
       {showDropdown && (
         <div style={styles.dropdown}>
-          {/* Suggestions */}
           {query.trim().length > 0 && suggestions.length > 0 && (
             <>
               <div style={styles.sectionLabel}>Suggestions</div>
@@ -339,7 +333,7 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
                   {sug.type === "food" ? (
                     <>
                       <img
-                        src={`${url}/uploads/${sug.image}`}
+                        src={getImageUrl(sug.image)}
                         alt={sug.name}
                         style={styles.suggImg}
                       />
@@ -368,7 +362,6 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
             </>
           )}
 
-          {/* No results */}
           {query.trim().length > 0 && suggestions.length === 0 && (
             <div style={styles.empty}>
               <p style={{ fontSize: "32px", margin: "0 0 10px" }}>🔍</p>
@@ -376,7 +369,6 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
             </div>
           )}
 
-          {/* Recent Searches (jab query khaali ho) */}
           {query.trim().length === 0 && recentSearches.length > 0 && (
             <>
               <div
@@ -417,7 +409,6 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
             </>
           )}
 
-          {/* Empty state */}
           {query.trim().length === 0 && recentSearches.length === 0 && (
             <div style={styles.empty}>
               <p style={{ fontSize: "32px", margin: "0 0 10px" }}>🔍</p>
@@ -431,7 +422,6 @@ const SearchBar = ({ onSearchChange, onSelectFood }) => {
 };
 
 export default SearchBar;
-
 
 
 

@@ -35,6 +35,13 @@ const MyOrders = () => {
     if (token) fetchOrders();
   }, [token]);
 
+  // ✅ FIX: Smart image URL — Cloudinary ya local
+  const getImageUrl = (img) => {
+    if (!img) return "";
+    if (img.startsWith("http")) return img;
+    return `${url}/uploads/${img}`;
+  };
+
   const getStatusColor = (status) => {
     if (status === "Delivered") return { bg: "#e8f5e9", color: "#27ae60" };
     if (status === "Out for delivery")
@@ -124,7 +131,7 @@ const MyOrders = () => {
                 {order.items.map((item, idx) => (
                   <div key={idx} className="my-order-item">
                     <img
-                      src={`${url}/uploads/${item.image}`}
+                      src={getImageUrl(item.image)}
                       alt={item.name}
                       className="item-thumb"
                       onError={(e) => {

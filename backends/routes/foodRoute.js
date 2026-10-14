@@ -1,5 +1,7 @@
 import express from "express";
 import multer from "multer";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary.js";
 import {
   addFood,
   listFood,
@@ -9,19 +11,28 @@ import {
 
 const foodRouter = express.Router();
 
-const storage = multer.diskStorage({
-  destination: "uploads",
-  filename: (req, file, cb) => cb(null, `${Date.now()}${file.originalname}`),
+// ✅ CLOUDINARY STORAGE
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "foody",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation: [{ width: 800, height: 800, crop: "limit" }],
+  },
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
 
-// ✅ Multiple images (max 5)
+// ✅ Same endpoints — nothing else changes
 foodRouter.post("/add", upload.array("images", 5), addFood);
 foodRouter.get("/list", listFood);
 foodRouter.post("/remove", removeFood);
 foodRouter.post("/update", upload.array("images", 5), updateFood);
 
 export default foodRouter;
+
 
 

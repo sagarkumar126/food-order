@@ -1,10 +1,10 @@
 import orderModel from "../models/orderModel.js";
 
-// ✅ getNotifications — saare paid orders (koi date filter nahi)
+// ✅ getNotifications — ALL orders show
 export const getNotifications = async (req, res) => {
   try {
     const recentOrders = await orderModel
-      .find({ payment: true })
+      .find({})
       .sort({ _id: -1 })
       .limit(10);
 
@@ -32,13 +32,17 @@ export const getNotifications = async (req, res) => {
   }
 };
 
-// ✅ getUnreadCount — saare paid orders ka count
+// ✅ getUnreadCount — ALL orders count
 export const getUnreadCount = async (req, res) => {
   try {
-    const count = await orderModel.countDocuments({ payment: true });
+    const count = await orderModel.countDocuments({});
     res.json({ success: true, count });
   } catch (error) {
     console.log("Unread count error:", error);
     res.json({ success: false, count: 0 });
   }
 };
+
+
+
+

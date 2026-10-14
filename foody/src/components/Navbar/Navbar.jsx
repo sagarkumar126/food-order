@@ -4,7 +4,6 @@ import "./Navbar.css";
 import { assets } from "../../assets/assets";
 import { StoreContext } from "../../context/StoreContext";
 import { toast } from "react-toastify";
-import { getWishlist } from "../../utils/wishlist";
 
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
@@ -17,8 +16,6 @@ const Navbar = ({ setShowLogin }) => {
   const location = useLocation();
   const profileRef = useRef(null);
 
-  const wishlistCount = getWishlist().length;
-
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
@@ -28,6 +25,15 @@ const Navbar = ({ setShowLogin }) => {
   useEffect(() => {
     setShowMobileMenu(false);
     setShowProfileDropdown(false);
+  }, [location.pathname]);
+
+  // ✅ URL → Menu sync (so correct tab highlights)
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/" || path === "/home") setMenu("home");
+    else if (path === "/myorders") setMenu("orders");
+    else if (path === "/wishlist") setMenu("wishlist");
+    else if (path === "/cart") setMenu("cart");
   }, [location.pathname]);
 
   useEffect(() => {
@@ -104,7 +110,7 @@ const Navbar = ({ setShowLogin }) => {
         <img src={assets.logo} alt="logo" />
       </Link>
 
-      {/* DESKTOP MENU — Menu link hataya, Mobile-App + Contact Us properly */}
+      {/* DESKTOP MENU */}
       <ul className="navbar-menu">
         <li>
           <Link
@@ -140,7 +146,6 @@ const Navbar = ({ setShowLogin }) => {
           </li>
         )}
 
-        {/* ✅ Mobile-App — working */}
         <li>
           <button
             type="button"
@@ -151,7 +156,6 @@ const Navbar = ({ setShowLogin }) => {
           </button>
         </li>
 
-        {/* ✅ Contact Us — working */}
         <li>
           <button
             type="button"
@@ -171,13 +175,12 @@ const Navbar = ({ setShowLogin }) => {
           <img src={assets.search_icon} alt="search" />
         </button>
 
+        {/* ✅ Wishlist — no badge number */}
         <Link to="/wishlist" className="nav-icon-btn wishlist-btn-nav" title="My Wishlist">
           <span className="icon-emoji">❤️</span>
-          {wishlistCount > 0 && (
-            <span className="badge wishlist-badge">{wishlistCount}</span>
-          )}
         </Link>
 
+        {/* ✅ Cart — badge stays */}
         <Link to="/cart" className="nav-icon-btn cart-btn" title="My Cart">
           <img src={assets.basket_icon} alt="cart" />
           {getCartCount() > 0 && (
@@ -322,7 +325,6 @@ const Navbar = ({ setShowLogin }) => {
             </li>
           )}
 
-          {/* ✅ Mobile-App in mobile menu */}
           <li>
             <button
               type="button"
@@ -335,7 +337,6 @@ const Navbar = ({ setShowLogin }) => {
             </button>
           </li>
 
-          {/* ✅ Contact Us in mobile menu */}
           <li>
             <button
               type="button"

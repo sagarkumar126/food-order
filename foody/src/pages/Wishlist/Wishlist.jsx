@@ -9,6 +9,13 @@ const Wishlist = () => {
   const { food_list, url, addToCart } = useContext(StoreContext);
   const [wishlistIds, setWishlistIds] = useState([]);
 
+  // ✅ Smart image URL
+  const getImageUrl = (img) => {
+    if (!img) return "";
+    if (img.startsWith("http")) return img;
+    return `${url}/uploads/${img}`;
+  };
+
   useEffect(() => {
     setWishlistIds(getWishlist());
   }, []);
@@ -251,7 +258,7 @@ const Wishlist = () => {
             >
               <div style={styles.imgContainer}>
                 <img
-                  src={`${url}/uploads/${food.image}`}
+                  src={getImageUrl(food.image)}
                   alt={food.name}
                   style={styles.img}
                 />
@@ -305,7 +312,6 @@ const Wishlist = () => {
 };
 
 export default Wishlist;
-
 
 
 

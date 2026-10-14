@@ -14,24 +14,31 @@ const Confirm = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [verified, setVerified] = useState(false);
 
-  // ✅ Payment verify karo — ye admin tak order pahunchayega
   useEffect(() => {
     const verifyPayment = async () => {
       try {
+        console.log("🔵 Confirm page loaded");
+        console.log("🔵 URL params:", { success, orderId });
+        console.log("🔵 Calling verify API...");
+
         const res = await axios.post(url + "/api/order/verify", {
           success,
           orderId,
         });
+
+        console.log("🔵 Verify response:", res.data);
+
         if (res.data.success) {
           await clearCart();
           setVerified(true);
-          // ✅ 300ms baad popup dikhao
           setTimeout(() => setShowPopup(true), 300);
         } else {
+          console.log("❌ Verify returned success: false");
           navigate("/");
         }
       } catch (e) {
-        console.error(e);
+        console.error("❌ Verify error:", e);
+        console.error("❌ Error response:", e.response?.data);
         navigate("/");
       }
     };
@@ -45,22 +52,15 @@ const Confirm = () => {
 
   return (
     <div className="confirm-page">
-      {/* Background: success animation */}
       <div className="confirm-page-card">
         <div className="confirm-page-icon">🎉</div>
         <h1 className="confirm-page-title">Payment Successful!</h1>
-        <p className="confirm-page-subtitle">
-          Finalizing your order...
-        </p>
+        <p className="confirm-page-subtitle">Finalizing your order...</p>
       </div>
 
-      {/* ✅ POPUP */}
       {showPopup && verified && (
         <div className="confirm-popup-overlay" onClick={handleOk}>
-          <div
-            className="confirm-popup"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="confirm-popup" onClick={(e) => e.stopPropagation()}>
             <div className="confirm-popup-icon">✅</div>
             <h2 className="confirm-popup-title">Your order is confirmed!</h2>
             <p className="confirm-popup-message">
@@ -81,3 +81,7 @@ const Confirm = () => {
 };
 
 export default Confirm;
+
+
+
+

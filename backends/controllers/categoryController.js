@@ -133,3 +133,7 @@ export const updateCategory = async (req, res) => {
     res.json({ success: false, message: "Error updating category" });
   }
 };
+
+
+
+

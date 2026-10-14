@@ -4,6 +4,12 @@ import { toast } from "react-toastify";
 
 const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
   const [newImages, setNewImages] = useState([]);
+
+  // ✅ NEW: Existing images ka state — taaki delete kar sake
+  const [existingImages, setExistingImages] = useState(
+    food.images && food.images.length > 0 ? food.images : [food.image]
+  );
+
   const [data, setData] = useState({
     name: food.name,
     description: food.description,
@@ -14,24 +20,43 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
     isVeg: food.isVeg !== undefined ? food.isVeg : false,
   });
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("basic"); // basic | pricing | images
+  const [activeTab, setActiveTab] = useState("basic");
 
   const onChangeHandler = (e) => {
     const { name, value } = e.target;
     setData((d) => ({ ...d, [name]: value }));
   };
 
+  // ✅ Multiple images APPEND karo
   const onImagesChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length > 5) {
-      toast.warning("Max 5 images allowed");
+    const total = newImages.length + files.length;
+
+    if (total > 5) {
+      toast.warning(
+        `Max 5 nayi images. Abhi ${newImages.length} hain, ${
+          5 - newImages.length
+        } aur add kar sakte ho.`
+      );
+      e.target.value = "";
       return;
     }
-    setNewImages(files);
+
+    setNewImages((prev) => [...prev, ...files]);
+    e.target.value = "";
   };
 
   const removeNewImage = (index) => {
     setNewImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // ✅ NEW: Purani image delete karo
+  const removeExistingImage = (imgToRemove) => {
+    if (existingImages.length === 1) {
+      toast.warning("At least 1 image required. Add new first.");
+      return;
+    }
+    setExistingImages((prev) => prev.filter((img) => img !== imgToRemove));
   };
 
   const onSubmitHandler = async (e) => {
@@ -48,6 +73,9 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
       formData.append("stock", Number(data.stock));
       formData.append("discount", Number(data.discount));
       formData.append("isVeg", data.isVeg);
+
+      // ✅ Purani bachi hui images bhejo
+      formData.append("existingImages", JSON.stringify(existingImages));
 
       if (newImages.length > 0) {
         newImages.forEach((img) => {
@@ -72,12 +100,12 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
     }
   };
 
-  const existingImages =
-    food.images && food.images.length > 0 ? food.images : [food.image];
+  const getImageUrl = (image) => {
+    if (!image) return "";
+    if (image.startsWith("http")) return image;
+    return `${url}/uploads/${image}`;
+  };
 
-  // ============================================
-  // ✅ STYLES
-  // ============================================
   const styles = {
     overlay: {
       position: "fixed",
@@ -105,7 +133,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
       fontFamily: "Poppins, sans-serif",
       animation: "modalIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
     },
-    // ✅ Header
     header: {
       background: "linear-gradient(135deg, #ff6347 0%, #e74c3c 100%)",
       padding: "24px 30px",
@@ -175,7 +202,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
       position: "relative",
       zIndex: 1,
     },
-    // ✅ Tabs
     tabs: {
       display: "flex",
       gap: "4px",
@@ -199,7 +225,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
       alignItems: "center",
       gap: "6px",
     }),
-    // ✅ Form Body
     body: {
       padding: "24px 30px",
       overflowY: "auto",
@@ -254,7 +279,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
       gap: "16px",
       flexWrap: "wrap",
     },
-    // ✅ Image Upload
     imagesSection: {
       display: "flex",
       flexDirection: "column",
@@ -311,13 +335,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
       background: "#fafafa",
       transition: "0.3s",
     },
-    imageLabel: {
-      fontSize: "11px",
-      color: "#888",
-      fontWeight: "600",
-      marginTop: "4px",
-      textAlign: "center",
-    },
     sectionTitle: {
       fontSize: "14px",
       fontWeight: "800",
@@ -327,7 +344,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
       alignItems: "center",
       gap: "8px",
     },
-    // ✅ Veg Toggle
     vegRow: {
       display: "flex",
       gap: "12px",
@@ -348,7 +364,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
       fontWeight: "700",
       color: active ? color : "#888",
     }),
-    // ✅ Footer
     footer: {
       padding: "18px 30px",
       background: "#fafafa",
@@ -387,7 +402,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
       alignItems: "center",
       gap: "8px",
     }),
-    // ✅ Preview Card
     preview: {
       background: "linear-gradient(135deg, #fff9f7, #fff4f2)",
       border: "2px solid #ffe6e0",
@@ -441,7 +455,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
       </style>
 
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-        {/* ✅ HEADER */}
         <div style={styles.header}>
           <div style={styles.headerBg}></div>
           <div style={styles.headerLeft}>
@@ -469,7 +482,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
           </button>
         </div>
 
-        {/* ✅ TABS */}
         <div style={styles.tabs}>
           <button
             style={styles.tab(activeTab === "basic")}
@@ -491,13 +503,11 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
           </button>
         </div>
 
-        {/* ✅ BODY */}
         <form onSubmit={onSubmitHandler} style={{ display: "contents" }}>
           <div style={styles.body}>
-            {/* Preview Card */}
             <div style={styles.preview}>
               <img
-                src={`${url}/uploads/${existingImages[0]}`}
+                src={getImageUrl(existingImages[0])}
                 alt={food.name}
                 style={styles.previewImg}
               />
@@ -513,7 +523,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
               </div>
             </div>
 
-            {/* ✅ TAB 1: BASIC */}
             {activeTab === "basic" && (
               <>
                 <div style={styles.formGroup}>
@@ -524,17 +533,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
                     name="name"
                     value={data.name}
                     onChange={onChangeHandler}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#ff6347";
-                      e.target.style.background = "white";
-                      e.target.style.boxShadow =
-                        "0 0 0 4px rgba(255,99,71,0.1)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#eef0f5";
-                      e.target.style.background = "#fafafa";
-                      e.target.style.boxShadow = "none";
-                    }}
                     required
                   />
                 </div>
@@ -546,17 +544,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
                     name="description"
                     value={data.description}
                     onChange={onChangeHandler}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#ff6347";
-                      e.target.style.background = "white";
-                      e.target.style.boxShadow =
-                        "0 0 0 4px rgba(255,99,71,0.1)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#eef0f5";
-                      e.target.style.background = "#fafafa";
-                      e.target.style.boxShadow = "none";
-                    }}
                     required
                   />
                 </div>
@@ -604,7 +591,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
               </>
             )}
 
-            {/* ✅ TAB 2: PRICING */}
             {activeTab === "pricing" && (
               <>
                 <div style={styles.row}>
@@ -616,14 +602,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
                       name="price"
                       value={data.price}
                       onChange={onChangeHandler}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#ff6347";
-                        e.target.style.background = "white";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#eef0f5";
-                        e.target.style.background = "#fafafa";
-                      }}
                       required
                     />
                   </div>
@@ -636,14 +614,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
                       name="stock"
                       value={data.stock}
                       onChange={onChangeHandler}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#ff6347";
-                        e.target.style.background = "white";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#eef0f5";
-                        e.target.style.background = "#fafafa";
-                      }}
                       min="0"
                     />
                   </div>
@@ -656,14 +626,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
                       name="discount"
                       value={data.discount}
                       onChange={onChangeHandler}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#ff6347";
-                        e.target.style.background = "white";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#eef0f5";
-                        e.target.style.background = "#fafafa";
-                      }}
                       min="0"
                       max="100"
                     />
@@ -697,29 +659,12 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
               </>
             )}
 
-            {/* ✅ TAB 3: IMAGES */}
             {activeTab === "images" && (
               <div style={styles.imagesSection}>
+                {/* ✅ EXISTING IMAGES — delete button ke saath */}
                 <div>
                   <div style={styles.sectionTitle}>
                     📸 Current Images ({existingImages.length})
-                  </div>
-                  <div style={styles.imagesGrid}>
-                    {existingImages.map((img, index) => (
-                      <div key={index} style={styles.imageBox}>
-                        <img
-                          src={`${url}/uploads/${img}`}
-                          alt={`existing-${index}`}
-                          style={styles.image}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div style={styles.sectionTitle}>
-                    ✨ Upload New Images (Max 5)
                   </div>
                   <p
                     style={{
@@ -728,7 +673,43 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
                       marginBottom: "12px",
                     }}
                   >
-                    Nayi images select karo toh purani replace ho jayengi
+                    🗑️ Kisi bhi image pe ✕ click karke delete kar sakte ho
+                  </p>
+                  <div style={styles.imagesGrid}>
+                    {existingImages.map((img, index) => (
+                      <div key={index} style={styles.imageBox}>
+                        <img
+                          src={getImageUrl(img)}
+                          alt={`existing-${index}`}
+                          style={styles.image}
+                        />
+                        {/* ✅ NEW: Delete button purani image pe */}
+                        <button
+                          type="button"
+                          style={styles.removeBtn}
+                          onClick={() => removeExistingImage(img)}
+                          title="Delete this image"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ✅ NEW IMAGES */}
+                <div>
+                  <div style={styles.sectionTitle}>
+                    ✨ Add New Images (Max 5)
+                  </div>
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      color: "#888",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    Nayi images add karo — purani ke saath add hongi
                   </p>
                   <div style={styles.imagesGrid}>
                     {newImages.map((img, index) => (
@@ -783,7 +764,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
             )}
           </div>
 
-          {/* ✅ FOOTER */}
           <div style={styles.footer}>
             <button
               type="button"
@@ -804,18 +784,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
               type="submit"
               style={styles.saveBtn(loading)}
               disabled={loading}
-              onMouseEnter={(e) => {
-                if (!loading) {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 10px 30px rgba(255, 99, 71, 0.5)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 6px 20px rgba(255, 99, 71, 0.4)";
-              }}
             >
               {loading ? "⏳ Saving..." : "💾 Save Changes"}
             </button>
@@ -827,5 +795,6 @@ const EditFoodModal = ({ food, url, onClose, onSuccess }) => {
 };
 
 export default EditFoodModal;
+
 
 
